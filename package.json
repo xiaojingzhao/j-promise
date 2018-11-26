@@ -1,0 +1,17 @@
+{
+  "name": "promise",
+  "version": "1.0.0",
+  "description": "promise",
+  "main": "promise.js",
+  "scripts": {
+    "test": "test"
+  },
+  "keywords": [
+    "promise"
+  ],
+  "author": "xiaojing",
+  "license": "MIT",
+  "devDependencies": {
+    "mocha": "^5.2.0"
+  }
+}
