@@ -8,6 +8,17 @@ function isFunction(fn) {
   return fn && typeof fn === "function";
 }
 
+function isPromise(p) {
+  return p instanceof Promise2;
+}
+
+function resolutionProcedure(value) {
+  if(isPromise(value)) {
+    return value;
+  }
+  return new Promise(res => res(value))
+}
+
 class Promise2 {
   constructor(func1) {
     this.value = null;
@@ -26,17 +37,11 @@ class Promise2 {
     }
     if(this.state === STATUS.FULFILLED && isFunction(onFulfilled)) {
       const value = onFulfilled(this.value);
-      if(value instanceof Promise2) {
-        return value;
-      }
-      return new Promise(res => res(value))
+      return resolutionProcedure(value)
     }
     if(this.state === STATUS.REJECTED && isFunction(onRejected)) {
       const reason = onRejected(this.reason);
-      if(reason instanceof Promise2) {
-        return reason;
-      }
-      return new Promise(res => res(reason))
+      return resolutionProcedure(reason);
     }
     return this
   }
@@ -49,7 +54,7 @@ class Promise2 {
       if(isFunction(onFulfilled)) {
         const val = onFulfilled(value)
         let p = new Promise2(res => res(val));
-        if(val instanceof Promise2) {
+        if(isPromise(val)) {
           p = val
         }
         this.eventQueues.forEach(events => p = p.then(events.onFulfilled, events.onRejected));
@@ -67,7 +72,7 @@ class Promise2 {
       if(isFunction(onRejected)) {
         const val = onRejected(reason)
         let p = new Promise2(res => res(val));
-        if(val instanceof Promise2) {
+        if(isPromise(val)) {
           p = val
         }
         this.eventQueues.forEach(events => p = p.then(events.onFulfilled, events.onRejected));
@@ -82,6 +87,5 @@ class Promise2 {
   // TODO: 
   finally() {}
 }
-
 
 module.exports = Promise2
