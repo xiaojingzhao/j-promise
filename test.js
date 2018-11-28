@@ -1,5 +1,6 @@
 const Promise2 = require("./promise");
 
+// TODO: more test case 
 var a = new Promise2((res, rej) => {
   setTimeout(() => {
     console.log("1234");
