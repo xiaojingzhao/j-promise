@@ -4,12 +4,12 @@
   "description": "promise",
   "main": "promise.js",
   "scripts": {
-    "test": "test"
+    "test": "promises-aplus-tests ./test/adapter"
   },
   "keywords": [
     "promise"
   ],
-  "author": "xiaojing",
+  "author": "xiaojingzhao",
   "license": "MIT",
   "devDependencies": {
     "mocha": "^5.2.0",
