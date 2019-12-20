@@ -1,6 +1,6 @@
-const Promise2 = require("../promise");
+const Promise2 = require("../promise-test");
 
-const p = new Promise2((res, rej) => {rej("a")})
+const p = new Promise2((res, rej) => {});
 
 module.exports = {
   deferred() {
@@ -8,6 +8,6 @@ module.exports = {
       promise: p,
       resolve: p.resolve.bind(p),
       reject: p.reject.bind(p)
-    }
+    };
   }
-}
+};

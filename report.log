@@ -1,0 +1,183 @@
+yarn run v1.12.3
+$ promises-aplus-tests ./test/adapter
+
+
+  2.1.2.1: When fulfilled, a promise: must not transition to any other state.
+    ✓ already-fulfilled
+    ✓ immediately-fulfilled
+    ✓ eventually-fulfilled
+    ✓ trying to fulfill then immediately reject
+    ✓ trying to fulfill then reject, delayed
+    ✓ trying to fulfill immediately then reject delayed
+
+  2.1.3.1: When rejected, a promise: must not transition to any other state.
+    ✓ already-rejected
+    ✓ immediately-rejected
+    ✓ eventually-rejected
+    ✓ trying to reject then immediately fulfill
+    ✓ trying to reject then fulfill, delayed
+    ✓ trying to reject immediately then fulfill delayed
+
+  2.2.1: Both `onFulfilled` and `onRejected` are optional arguments.
+    2.2.1.1: If `onFulfilled` is not a function, it must be ignored.
+      applied to a directly-rejected promise
+        1) `onFulfilled` is `undefined`
+        2) `onFulfilled` is `null`
+        3) `onFulfilled` is `false`
+        4) `onFulfilled` is `5`
+        5) `onFulfilled` is an object
+      applied to a promise rejected and then chained off of
+        6) `onFulfilled` is `undefined`
+        7) `onFulfilled` is `null`
+        8) `onFulfilled` is `false`
+        9) `onFulfilled` is `5`
+        10) `onFulfilled` is an object
+    2.2.1.2: If `onRejected` is not a function, it must be ignored.
+      applied to a directly-fulfilled promise
+        11) `onRejected` is `undefined`
+        12) `onRejected` is `null`
+        13) `onRejected` is `false`
+        14) `onRejected` is `5`
+        15) `onRejected` is an object
+      applied to a promise fulfilled and then chained off of
+        16) `onFulfilled` is `undefined`
+        17) `onFulfilled` is `null`
+        18) `onFulfilled` is `false`
+        19) `onFulfilled` is `5`
+        20) `onFulfilled` is an object
+
+  2.2.2: If `onFulfilled` is a function,
+    2.2.2.1: it must be called after `promise` is fulfilled, with `promise`’s fulfillment value as its first argument.
+      21) already-fulfilled
+      22) immediately-fulfilled
+      23) eventually-fulfilled
+    2.2.2.2: it must not be called before `promise` is fulfilled
+      24) fulfilled after a delay
+      ✓ never fulfilled
+    2.2.2.3: it must not be called more than once.
+      25) already-fulfilled
+      26) trying to fulfill a pending promise more than once, immediately
+      27) trying to fulfill a pending promise more than once, delayed
+      28) trying to fulfill a pending promise more than once, immediately then delayed
+      29) when multiple `then` calls are made, spaced apart in time
+      30) when `then` is interleaved with fulfillment
+
+  2.2.3: If `onRejected` is a function,
+    2.2.3.1: it must be called after `promise` is rejected, with `promise`’s rejection reason as its first argument.
+      31) already-rejected
+      32) immediately-rejected
+      33) eventually-rejected
+    2.2.3.2: it must not be called before `promise` is rejected
+      34) rejected after a delay
+      ✓ never rejected
+    2.2.3.3: it must not be called more than once.
+      35) already-rejected
+      36) trying to reject a pending promise more than once, immediately
+      37) trying to reject a pending promise more than once, delayed
+      38) trying to reject a pending promise more than once, immediately then delayed
+      39) when multiple `then` calls are made, spaced apart in time
+      40) when `then` is interleaved with rejection
+
+  2.2.4: `onFulfilled` or `onRejected` must not be called until the execution context stack contains only platform code.
+    `then` returns before the promise becomes fulfilled or rejected
+      41) already-fulfilled
+      42) immediately-fulfilled
+      43) eventually-fulfilled
+      44) already-rejected
+      45) immediately-rejected
+      46) eventually-rejected
+    Clean-stack execution ordering tests (fulfillment case)
+      ✓ when `onFulfilled` is added immediately before the promise is fulfilled
+      ✓ when `onFulfilled` is added immediately after the promise is fulfilled
+      47) when one `onFulfilled` is added inside another `onFulfilled`
+      48) when `onFulfilled` is added inside an `onRejected`
+      49) when the promise is fulfilled asynchronously
+    Clean-stack execution ordering tests (rejection case)
+      ✓ when `onRejected` is added immediately before the promise is rejected
+      ✓ when `onRejected` is added immediately after the promise is rejected
+      50) when `onRejected` is added inside an `onFulfilled`
+      51) when one `onRejected` is added inside another `onRejected`
+      52) when the promise is rejected asynchronously
+
+  2.2.5 `onFulfilled` and `onRejected` must be called as functions (i.e. with no `this` value).
+    strict mode
+      53) fulfilled
+      54) rejected
+    sloppy mode
+      55) fulfilled
+      56) rejected
+
+  2.2.6: `then` may be called multiple times on the same promise.
+    2.2.6.1: If/when `promise` is fulfilled, all respective `onFulfilled` callbacks must execute in the order of their originating calls to `then`.
+      multiple boring fulfillment handlers
+        57) already-fulfilled
+        58) immediately-fulfilled
+        59) eventually-fulfilled
+      multiple fulfillment handlers, one of which throws
+        60) already-fulfilled
+        61) immediately-fulfilled
+        62) eventually-fulfilled
+      results in multiple branching chains with their own fulfillment values
+        63) already-fulfilled
+        64) immediately-fulfilled
+        65) eventually-fulfilled
+      `onFulfilled` handlers are called in the original order
+        66) already-fulfilled
+        67) immediately-fulfilled
+        68) eventually-fulfilled
+        even when one handler is added inside another handler
+          69) already-fulfilled
+          70) immediately-fulfilled
+          71) eventually-fulfilled
+    2.2.6.2: If/when `promise` is rejected, all respective `onRejected` callbacks must execute in the order of their originating calls to `then`.
+      multiple boring rejection handlers
+        72) already-rejected
+        73) immediately-rejected
+        74) eventually-rejected
+      multiple rejection handlers, one of which throws
+        75) already-rejected
+        76) immediately-rejected
+        77) eventually-rejected
+      results in multiple branching chains with their own fulfillment values
+        78) already-rejected
+        79) immediately-rejected
+        80) eventually-rejected
+      `onRejected` handlers are called in the original order
+        81) already-rejected
+        82) immediately-rejected
+        83) eventually-rejected
+        even when one handler is added inside another handler
+          84) already-rejected
+          85) immediately-rejected
+          86) eventually-rejected
+
+  2.2.7: `then` must return a promise: `promise2 = promise1.then(onFulfilled, onRejected)`
+    ✓ is a promise
+    2.2.7.1: If either `onFulfilled` or `onRejected` returns a value `x`, run the Promise Resolution Procedure `[[Resolve]](promise2, x)`
+      ✓ see separate 3.3 tests
+    2.2.7.2: If either `onFulfilled` or `onRejected` throws an exception `e`, `promise2` must be rejected with `e` as the reason.
+      The reason is `undefined`
+        87) already-fulfilled
+        88) immediately-fulfilled
+        89) eventually-fulfilled
+        90) already-rejected
+        91) immediately-rejected
+        92) eventually-rejected
+      The reason is `null`
+        93) already-fulfilled
+        94) immediately-fulfilled
+        95) eventually-fulfilled
+        96) already-rejected
+        97) immediately-rejected
+        98) eventually-rejected
+      The reason is `false`
+        99) already-fulfilled
+        100) immediately-fulfilled
+        101) eventually-fulfilled
+        102) already-rejected
+        103) immediately-rejected
+        104) eventually-rejected
+      The reason is `0`
+        105) already-fulfilled
+        106) immediately-fulfilled
+        107) eventually-fulfilled
