@@ -1,4 +1,4 @@
-const Promise2 = require("../promise-j");
+const Promise2 = require("../promise");
 
 module.exports = {
   deferred() {
