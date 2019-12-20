@@ -1,2 +1,13 @@
 # j-promise
-just a demo right now...
+
+Run test
+
+```
+yarn test
+```
+
+Generate a reporter
+
+```
+yarn test > report.log 2>&1
+```

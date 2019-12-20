@@ -22,31 +22,6 @@ class PromiseJ {
   }
 
   then(onFulfilled, onRejected) {
-    //  这里总结下来应有五种情况，无论哪种情况，都需要返回新的promise
-    // const newPromise = new PromiseJ(() => {});
-
-    // // promise1 是 fullfiled
-    // if (this.state === STATUS.FULFILLED) {
-    //   // onFulfilled 是一个function
-    //   if (isFunction(onFulfilled)) {
-    //     newPromise.onFulfilled = onFulfilled;
-    //     this._processOnfulfilled(newPromise);
-    //   } else {
-    //     // onFullfilled 不存在
-    //     newPromise.resolve(this.value);
-    //   }
-    // } else if (this.state === STATUS.PENDING) {
-    //   if (isFunction(onFulfilled)) {
-    //     newPromise.onFulfilled = onFulfilled;
-    //   }
-    //   if (isFunction(onRejected)) {
-    //     newPromise.onRejected = onRejected;
-    //   }
-    //   // 这里形成一个promise链
-    //   this.nextPromiseQueue.push(newPromise);
-    // }
-    // return newPromise;
-    //  这里总结下来应有五种情况，无论哪种情况，都需要返回新的promise
     const newPromise = new PromiseJ(() => {});
     if (isFunction(onFulfilled)) {
       newPromise.onFulfilled = onFulfilled;
@@ -62,13 +37,10 @@ class PromiseJ {
   _resolution(promise, x) {
     // 第一种情况 x === promise2
     if (x === promise) {
-      throw new Error("TypeError");
+      promise.reject("TypeError");
     } else if (x instanceof PromiseJ) {
       // 第二种情况 x 是一个 promise 实例
       if (x.state === STATUS.PENDING) {
-        // NOTE: bind here is not working
-        // x.resolve.bind(promise);
-        // using x instead promise
         x.nextPromise = promise.nextPromise;
       } else if (x.state === STATUS.REJECTED) {
         if (promise) {
@@ -113,7 +85,8 @@ class PromiseJ {
       const promise = this.nextPromiseQueue.shift();
       if (promise && isFunction(promise.onFulfilled)) {
         try {
-          let x = promise.onFulfilled(this.value);
+          const { onFulfilled } = promise;
+          let x = onFulfilled(this.value);
           this._resolution(promise, x);
         } catch (e) {
           promise.reject(e);
@@ -164,6 +137,7 @@ class PromiseJ {
       writable: false
     });
     queueMicrotask(this._processOnfulfilled.bind(this));
+    return this;
   }
 
   reject(reason) {
@@ -180,6 +154,7 @@ class PromiseJ {
       writable: false
     });
     queueMicrotask(this._processOnRejected.bind(this));
+    return this;
   }
 
   // catch(errorHandler) {
