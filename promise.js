@@ -8,6 +8,16 @@ function isFunction(fn) {
   return fn && typeof fn === "function";
 }
 
+function clearTimer(timer) {
+  if (timer) {
+    clearTimeout(timer);
+  }
+  return;
+}
+
+let fulfilledTimer = null;
+let rejectedTimer = null;
+
 class PromiseJ {
   constructor(callback) {
     // new PromiseJ((resolve, reject) => {}), callback就是(resolve, reject) => {}
@@ -25,9 +35,19 @@ class PromiseJ {
     const newPromise = new PromiseJ(() => {});
     if (isFunction(onFulfilled)) {
       newPromise.onFulfilled = onFulfilled;
+      if (this.state === STATUS.FULFILLED) {
+        fulfilledTimer = clearTimer(fulfilledTimer);
+        fulfilledTimer = setTimeout(this._processOnfulfilled.bind(this));
+      }
     }
     if (isFunction(onRejected)) {
       newPromise.onRejected = onRejected;
+      if (
+        this.state === STATUS.REJECTED // TODO: 应该设置一个标记
+      ) {
+        rejectedTimer = clearTimeout(rejectedTimer);
+        rejectedTimer = setTimeout(this._processOnRejected.bind(this));
+      }
     }
     this.nextPromiseQueue.push(newPromise);
     // 这里返回promise，让下一个then生成的promise挂到newPromise上
@@ -54,26 +74,29 @@ class PromiseJ {
       }
     } else if (typeof x === "object" || typeof x === "function") {
       // 第三种情况 x 是一个 object 或者 function
-      let then;
-      try {
-        then = x.then;
-      } catch (error) {
-        promise.reject(error);
-      }
-      if (isFunction(then)) {
+      if (x && x.then) {
+        let then;
         try {
-          then.call(
-            x,
-            promise.resolve.bind(promise),
-            promise.reject.bind(promise)
-          );
+          then = x.then;
         } catch (error) {
-          if (promise.state !== STATUS.PENDING) {
-            promise.reject(error);
-          }
+          promise.reject(error);
         }
-      } else {
-        promise.resolve(x);
+
+        if (isFunction(then)) {
+          try {
+            then.call(
+              x,
+              promise.resolve.bind(promise),
+              promise.reject.bind(promise)
+            );
+          } catch (error) {
+            if (promise.state !== STATUS.PENDING) {
+              promise.reject(error);
+            }
+          }
+        } else {
+          promise.resolve(x);
+        }
       }
     } else {
       promise.resolve(x);
@@ -99,7 +122,7 @@ class PromiseJ {
 
   _processOnRejected() {
     if (this.nextPromiseQueue.length === 0) {
-      throw this.reason;
+      // throw this.reason; // 在浏览器中，直接reject会直接报错
     }
     while (this.nextPromiseQueue.length) {
       const promise = this.nextPromiseQueue.shift();
