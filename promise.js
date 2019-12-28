@@ -15,9 +15,6 @@ function clearTimer(timer) {
   return;
 }
 
-let fulfilledTimer = null;
-let rejectedTimer = null;
-
 class PromiseJ {
   constructor(callback) {
     // new PromiseJ((resolve, reject) => {}), callback就是(resolve, reject) => {}
@@ -36,8 +33,7 @@ class PromiseJ {
     if (isFunction(onFulfilled)) {
       newPromise.onFulfilled = onFulfilled;
       if (this.state === STATUS.FULFILLED) {
-        fulfilledTimer = clearTimer(fulfilledTimer);
-        fulfilledTimer = setTimeout(this._processOnfulfilled.bind(this));
+        queueMicrotask(this._processOnfulfilled.bind(this, newPromise));
       }
     }
     if (isFunction(onRejected)) {
@@ -45,8 +41,7 @@ class PromiseJ {
       if (
         this.state === STATUS.REJECTED // TODO: 应该设置一个标记
       ) {
-        rejectedTimer = clearTimeout(rejectedTimer);
-        rejectedTimer = setTimeout(this._processOnRejected.bind(this));
+        queueMicrotask(this._processOnRejected.bind(this, newPromise));
       }
     }
     this.nextPromiseQueue.push(newPromise);
@@ -57,7 +52,7 @@ class PromiseJ {
   _resolution(promise, x) {
     // 第一种情况 x === promise2
     if (x === promise) {
-      promise.reject("TypeError");
+      promise.reject(new TypeError());
     } else if (x instanceof PromiseJ) {
       // 第二种情况 x 是一个 promise 实例
       if (x.state === STATUS.PENDING) {
@@ -97,54 +92,47 @@ class PromiseJ {
         } else {
           promise.resolve(x);
         }
+      } else {
+        promise.resolve(x);
       }
     } else {
       promise.resolve(x);
     }
   }
 
-  _processOnfulfilled() {
-    while (this.nextPromiseQueue.length) {
-      const promise = this.nextPromiseQueue.shift();
-      if (promise && isFunction(promise.onFulfilled)) {
-        try {
-          const { onFulfilled } = promise;
-          let x = onFulfilled(this.value);
-          this._resolution(promise, x);
-        } catch (e) {
-          promise.reject(e);
-        }
-      } else {
-        promise.resolve(this.value);
+  _processOnfulfilled(promise) {
+    if (promise && isFunction(promise.onFulfilled)) {
+      try {
+        const { onFulfilled } = promise;
+        let x = onFulfilled(this.value);
+        this._resolution(promise, x);
+      } catch (e) {
+        promise.reject(e);
       }
+    } else {
+      promise.resolve(this.value);
     }
   }
 
-  _processOnRejected() {
-    if (this.nextPromiseQueue.length === 0) {
-      // throw this.reason; // 在浏览器中，直接reject会直接报错
+  _processOnRejected(promise) {
+    let handleReject = null;
+    if (isFunction(promise.onRejected)) {
+      handleReject = promise.onRejected;
     }
-    while (this.nextPromiseQueue.length) {
-      const promise = this.nextPromiseQueue.shift();
-      let handleReject = null;
-      if (isFunction(promise.onRejected)) {
-        handleReject = promise.onRejected;
+    // catch 中传入的
+    if (isFunction(promise.errorHandler)) {
+      handleReject = promise.errorHandler;
+    }
+    if (isFunction(handleReject)) {
+      try {
+        let x = handleReject(this.reason);
+        this._resolution(promise, x);
+      } catch (e) {
+        promise.reject(e);
+        // throw e;
       }
-      // catch 中传入的
-      if (isFunction(promise.errorHandler)) {
-        handleReject = promise.errorHandler;
-      }
-      if (isFunction(handleReject)) {
-        try {
-          let x = handleReject(this.reason);
-          this._resolution(promise, x);
-        } catch (e) {
-          promise.reject(e);
-          throw e;
-        }
-      } else {
-        promise.reject(this.reason);
-      }
+    } else {
+      promise.reject(this.reason);
     }
   }
 
@@ -159,7 +147,10 @@ class PromiseJ {
       value,
       writable: false
     });
-    queueMicrotask(this._processOnfulfilled.bind(this));
+    while (this.nextPromiseQueue.length) {
+      const promise = this.nextPromiseQueue.shift();
+      queueMicrotask(this._processOnfulfilled.bind(this, promise));
+    }
     return this;
   }
 
@@ -176,7 +167,11 @@ class PromiseJ {
       value: reason,
       writable: false
     });
-    queueMicrotask(this._processOnRejected.bind(this));
+
+    while (this.nextPromiseQueue.length) {
+      const promise = this.nextPromiseQueue.shift();
+      queueMicrotask(this._processOnRejected.bind(this, promise));
+    }
     return this;
   }
 
