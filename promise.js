@@ -30,21 +30,19 @@ class PromiseJ {
 
   then(onFulfilled, onRejected) {
     const newPromise = new PromiseJ(() => {});
-    if (isFunction(onFulfilled)) {
-      newPromise.onFulfilled = onFulfilled;
-      if (this.state === STATUS.FULFILLED) {
-        queueMicrotask(this._processOnfulfilled.bind(this, newPromise));
-      }
+    newPromise.onFulfilled = onFulfilled;
+    newPromise.onRejected = onRejected;
+
+    if (this.state === STATUS.FULFILLED) {
+      queueMicrotask(this._processOnfulfilled.bind(this, newPromise));
     }
-    if (isFunction(onRejected)) {
-      newPromise.onRejected = onRejected;
-      if (
-        this.state === STATUS.REJECTED // TODO: 应该设置一个标记
-      ) {
-        queueMicrotask(this._processOnRejected.bind(this, newPromise));
-      }
+    if (this.state === STATUS.REJECTED) {
+      queueMicrotask(this._processOnRejected.bind(this, newPromise));
     }
-    this.nextPromiseQueue.push(newPromise);
+    if (this.state === STATUS.PENDING) {
+      this.nextPromiseQueue.push(newPromise);
+    }
+
     // 这里返回promise，让下一个then生成的promise挂到newPromise上
     return newPromise;
   }
@@ -56,7 +54,10 @@ class PromiseJ {
     } else if (x instanceof PromiseJ) {
       // 第二种情况 x 是一个 promise 实例
       if (x.state === STATUS.PENDING) {
-        x.nextPromise = promise.nextPromise;
+        x.nextPromiseQueue = x.nextPromiseQueue.concat(
+          promise.nextPromiseQueue
+        );
+        console.log("");
       } else if (x.state === STATUS.REJECTED) {
         if (promise) {
           promise.reject(x.reason);
@@ -147,10 +148,13 @@ class PromiseJ {
       value,
       writable: false
     });
-    while (this.nextPromiseQueue.length) {
-      const promise = this.nextPromiseQueue.shift();
-      queueMicrotask(this._processOnfulfilled.bind(this, promise));
-    }
+    queueMicrotask(() => {
+      while (this.nextPromiseQueue.length) {
+        const promise = this.nextPromiseQueue.shift();
+        this._processOnfulfilled(promise);
+      }
+    });
+
     return this;
   }
 
@@ -168,10 +172,13 @@ class PromiseJ {
       writable: false
     });
 
-    while (this.nextPromiseQueue.length) {
-      const promise = this.nextPromiseQueue.shift();
-      queueMicrotask(this._processOnRejected.bind(this, promise));
-    }
+    queueMicrotask(() => {
+      while (this.nextPromiseQueue.length) {
+        const promise = this.nextPromiseQueue.shift();
+        this._processOnRejected(promise);
+      }
+    });
+
     return this;
   }
 
