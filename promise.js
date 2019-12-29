@@ -70,28 +70,24 @@ class PromiseJ {
       }
     } else if (typeof x === "object" || typeof x === "function") {
       // 第三种情况 x 是一个 object 或者 function
-      if (x && x.then) {
-        let then;
-        try {
-          then = x.then;
-        } catch (error) {
-          promise.reject(error);
-        }
+      let then;
+      try {
+        then = x.then;
+      } catch (error) {
+        promise.reject(error);
+      }
 
-        if (isFunction(then)) {
-          try {
-            then.call(
-              x,
-              promise.resolve.bind(promise),
-              promise.reject.bind(promise)
-            );
-          } catch (error) {
-            if (promise.state !== STATUS.PENDING) {
-              promise.reject(error);
-            }
+      if (isFunction(then)) {
+        try {
+          then.call(
+            x,
+            promise.resolve.bind(promise),
+            promise.reject.bind(promise)
+          );
+        } catch (error) {
+          if (promise.state !== STATUS.PENDING) {
+            promise.reject(error);
           }
-        } else {
-          promise.resolve(x);
         }
       } else {
         promise.resolve(x);
