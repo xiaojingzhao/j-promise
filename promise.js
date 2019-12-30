@@ -57,16 +57,10 @@ class PromiseJ {
         x.nextPromiseQueue = x.nextPromiseQueue.concat(
           promise.nextPromiseQueue
         );
-        console.log("");
       } else if (x.state === STATUS.REJECTED) {
-        if (promise) {
-          promise.reject(x.reason);
-        } else {
-        }
+        promise.reject(x.reason);
       } else {
-        if (promise) {
-          promise.resolve(x.value);
-        }
+        promise._fulfillPromise(x.value);
       }
     } else if (typeof x === "object" || typeof x === "function") {
       // 第三种情况 x 是一个 object 或者 function
@@ -90,10 +84,10 @@ class PromiseJ {
           }
         }
       } else {
-        promise.resolve(x);
+        promise._fulfillPromise(x);
       }
     } else {
-      promise.resolve(x);
+      promise._fulfillPromise(x);
     }
   }
 
@@ -133,7 +127,7 @@ class PromiseJ {
     }
   }
 
-  resolve(value) {
+  _fulfillPromise(value) {
     // 只有pending状态可以转变为fullfilled
     if (this.state !== STATUS.PENDING) {
       return;
@@ -150,7 +144,10 @@ class PromiseJ {
         this._processOnfulfilled(promise);
       }
     });
+  }
 
+  resolve(value) {
+    this._resolution(this, value);
     return this;
   }
 
