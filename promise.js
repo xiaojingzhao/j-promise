@@ -79,7 +79,7 @@ class PromiseJ {
             promise.reject.bind(promise)
           );
         } catch (error) {
-          if (promise.state !== STATUS.PENDING) {
+          if (promise.state === STATUS.PENDING) {
             promise.reject(error);
           }
         }
@@ -175,6 +175,7 @@ class PromiseJ {
     return this;
   }
 
+  // 不是 promise A+ 标准
   // catch(errorHandler) {
   //   const newPromise = new PromiseJ(() => {});
   //   this.nextPromiseQueue.push(newPromise);
@@ -182,6 +183,7 @@ class PromiseJ {
   //   return newPromise;
   // }
 
+  // 不是 promise A+ 标准
   // finally(handleFinally) {
   //   const newPromise = new PromiseJ(() => {});
   //   this.nextPromiseQueue.push(newPromise);
