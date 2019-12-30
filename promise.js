@@ -62,7 +62,7 @@ class PromiseJ {
       } else {
         promise._fulfillPromise(x.value);
       }
-    } else if (typeof x === "object" || typeof x === "function") {
+    } else if ((x && typeof x === "object") || typeof x === "function") {
       // 第三种情况 x 是一个 object 或者 function
       let then;
       try {
