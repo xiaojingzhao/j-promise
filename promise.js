@@ -54,8 +54,9 @@ class PromiseJ {
     } else if (x instanceof PromiseJ) {
       // 第二种情况 x 是一个 promise 实例
       if (x.state === STATUS.PENDING) {
-        x.nextPromiseQueue = x.nextPromiseQueue.concat(
-          promise.nextPromiseQueue
+        x.then(
+          value => promise._fulfillPromise(value),
+          reason => promise.reject(reason)
         );
       } else if (x.state === STATUS.REJECTED) {
         promise.reject(x.reason);
