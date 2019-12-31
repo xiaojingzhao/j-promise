@@ -72,21 +72,22 @@ class PromiseJ {
       }
 
       if (isFunction(then)) {
+        let invokeCount = 0;
         try {
-          let resCount = 0;
-          let rejCount = 0;
           then.call(
             x,
             value => {
-              resCount++;
-              if (resCount === 1) {
+              invokeCount++;
+              if (invokeCount === 1) {
                 promise.resolve.call(promise, value);
               }
             },
             promise.reject.bind(promise)
           );
         } catch (error) {
-          if (promise.state === STATUS.PENDING) {
+          if (invokeCount === 1) {
+            // 抛出错误在 resolvePromise或者rejecPromise之后，忽略
+          } else if (promise.state === STATUS.PENDING) {
             promise.reject(error);
           }
         }
