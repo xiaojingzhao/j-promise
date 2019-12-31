@@ -73,9 +73,16 @@ class PromiseJ {
 
       if (isFunction(then)) {
         try {
+          let resCount = 0;
+          let rejCount = 0;
           then.call(
             x,
-            promise.resolve.bind(promise),
+            value => {
+              resCount++;
+              if (resCount === 1) {
+                promise.resolve.call(promise, value);
+              }
+            },
             promise.reject.bind(promise)
           );
         } catch (error) {
@@ -128,10 +135,6 @@ class PromiseJ {
   }
 
   _fulfillPromise(value) {
-    // 只有pending状态可以转变为fullfilled
-    if (this.state !== STATUS.PENDING) {
-      return;
-    }
     this.state = STATUS.FULFILLED;
     // 这里有一个问题，如何保证value不被更改，现在想到的方法是用Object.defineProperty中设置writable
     Object.defineProperty(this, "value", {
@@ -147,6 +150,10 @@ class PromiseJ {
   }
 
   resolve(value) {
+    // 只有pending状态可以转变为fullfilled
+    if (this.state !== STATUS.PENDING) {
+      return;
+    }
     this._resolution(this, value);
     return this;
   }
