@@ -70,6 +70,7 @@ class PromiseJ {
         then = x.then;
       } catch (error) {
         promise.reject(error);
+        return;
       }
 
       if (isFunction(then)) {
@@ -83,10 +84,15 @@ class PromiseJ {
                 promise.resolve.call(promise, value);
               }
             },
-            promise.reject.bind(promise)
+            reason => {
+              invokeCount++;
+              if (invokeCount === 1) {
+                promise.reject.call(promise, reason);
+              }
+            }
           );
         } catch (error) {
-          if (invokeCount === 1) {
+          if (invokeCount > 0) {
             // 抛出错误在 resolvePromise或者rejecPromise之后，忽略
           } else if (promise.state === STATUS.PENDING) {
             promise.reject(error);
