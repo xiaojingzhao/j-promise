@@ -8,13 +8,6 @@ function isFunction(fn) {
   return fn && typeof fn === "function";
 }
 
-function clearTimer(timer) {
-  if (timer) {
-    clearTimeout(timer);
-  }
-  return;
-}
-
 class PromiseJ {
   constructor(callback) {
     // new PromiseJ((resolve, reject) => {}), callback就是(resolve, reject) => {}

@@ -1,5 +1,7 @@
 # j-promise
 
+[![Coverage Status](https://coveralls.io/repos/github/xiaojingzhao/j-promise/badge.svg)](https://coveralls.io/github/xiaojingzhao/j-promise)
+
 通过 promise A+ 测试的 promise~
 
 ## node version > v11
